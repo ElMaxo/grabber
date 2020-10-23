@@ -23,17 +23,17 @@ type Article struct {
 	Description string
 }
 type Selector struct {
-	XPath string
-	Value ValueType
-	Attr  string
+	XPath string    `json:"xpath"`
+	Value ValueType `json:"value"`
+	Attr  string    `json:"attr"`
 }
 
 type Query struct {
-	ItemsSelector            Selector
-	TitleSelector            Selector
-	LinkSelector             Selector
-	DescriptionSelector      Selector
-	FollowLinkForDescription bool
+	ItemsSelector            Selector `json:"itemsSelector"`
+	TitleSelector            Selector `json:"titleSelector"`
+	LinkSelector             Selector `json:"linkSelector"`
+	DescriptionSelector      Selector `json:"descriptionSelector"`
+	FollowLinkForDescription bool     `json:"followLinkForDescription"`
 }
 
 type asyncDescJob struct {

@@ -26,3 +26,5 @@ _testmain.go
 *.test
 *.prof
 *.log
+/internal/rest
+!/internal/rest/.gitkeep

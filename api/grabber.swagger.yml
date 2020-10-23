@@ -1,0 +1,178 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  description: Provides an API for news grabbing at fetching
+  title: Grabber
+  contact:
+    email: armwebdev@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+host: "localhost:8080"
+basePath: "/api/v1/grabber"
+produces:
+  - application/json
+consumes:
+  - application/json
+
+paths:
+  /swagger:
+    get:
+      summary: returns json api description
+      description: getAPI
+      tags:
+        - description
+      operationId: getApi
+      responses:
+        200:
+          description: scheme in json
+          schema:
+            type: object
+
+  /jobs:
+    get:
+      summary: Get articles grabbing jobs
+      description: Returns articles grabbing jobs
+      tags:
+        - Jobs
+      operationId: getJobs
+      responses:
+        200:
+          description: "Articles grabbing jobs"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/job"
+    post:
+      summary: Create new articles grabbing job
+      description: Creates new articles grabbing job from specified source by specified rules
+      tags:
+        - Jobs
+      operationId: createJob
+      parameters:
+        - in: body
+          name: job
+          schema:
+            $ref: '#/definitions/job'
+          required: true
+          description: job parameters
+      responses:
+        200:
+          description: created job
+          schema:
+            $ref: "#/definitions/job"
+
+  /jobs/{id}:
+    delete:
+      summary: Delete job
+      description: Deletes specified articles grabbing job
+      tags:
+        - Jobs
+      operationId: deleteJob
+      parameters:
+        - in: path
+          name: id
+          type: string
+          description: job id
+          required: true
+      responses:
+        204:
+          description: "Job successfully deleted"
+
+  /articles:
+    get:
+      summary: Get grabbed articles
+      description: Gets grabbed articles from the database
+      tags:
+        - Articles
+      operationId: getArticles
+      parameters:
+        - in: query
+          name: q
+          type: string
+          description: search phrase
+          required: false
+        - in: query
+          name: page
+          type: integer
+          description: page (offset)
+          required: false
+        - in: query
+          name: rowsPerPage
+          type: integer
+          description: rows per page
+          required: false
+      responses:
+        200:
+          description: "Articles"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/article"
+
+definitions:
+
+  selector:
+    description: "Rule for article item parsing"
+    type: object
+    properties:
+      xpath:
+        type: string
+      value:
+        type: string
+        enum: ["attr", "text", "inner_text"]
+      attr:
+        type: string
+
+  query:
+    description: "Set of rules for parsing article"
+    type: object
+    properties:
+      itemsSelector:
+        $ref: "#/definitions/selector"
+      titleSelector:
+        $ref: "#/definitions/selector"
+      linkSelector:
+        $ref: "#/definitions/selector"
+      descriptionSelector:
+        $ref: "#/definitions/selector"
+      followLinkForDescription:
+        type: boolean
+    required:
+      - itemsSelector
+      - titleSelector
+      - linkSelector
+      - descriptionSelector
+
+  job:
+    description: "Articles grabbing job parameters"
+    type: object
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+      query:
+        $ref: "#/definitions/query"
+      periodSec:
+        type: integer
+        format: int64
+    required:
+      - url
+      - query
+      - periodSec
+
+  article:
+    description: "News article"
+    type: object
+    properties:
+      link:
+        type: string
+      title:
+        type: string
+      description:
+        type: string
+    required:
+      - link
+      - title

@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+
+  grabber:
+    image: dot/grabber
+    environment:
+      - "GRABBER_DB_URL=postgresql://postgres:postgres@postgresdb:5432/grabberdb?sslmode=disable"
+    ports:
+      - 8701:8701
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 10s
+    networks:
+      - grabber_net
+
+networks:
+  grabber_net:
+    driver: overlay
+    external: true

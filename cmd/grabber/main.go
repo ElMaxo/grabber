@@ -1,69 +1,61 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"encoding/json"
+	"grabber/internal/backend"
+	"grabber/internal/config"
 	"grabber/internal/grabber"
+	"grabber/internal/repository"
+	"grabber/internal/rest/restapi"
+	"grabber/internal/rest/restapi/operations"
 	"log"
-	"os"
+	"time"
+
+	"github.com/go-openapi/loads"
 )
 
-var lentaQuery = grabber.Query{
-	ItemsSelector: grabber.Selector{
-		XPath: "//div[@class='span4']/div[@class='item']/a",
-	},
-	TitleSelector: grabber.Selector{
-		Value: grabber.Text,
-	},
-	LinkSelector: grabber.Selector{
-		Value: grabber.Attribute,
-		Attr:  "href",
-	},
-	DescriptionSelector: grabber.Selector{
-		XPath: "//div[@itemprop='articleBody']",
-		Value: grabber.InnerText,
-	},
-	FollowLinkForDescription: true,
-}
-
-var ramblerQuery = grabber.Query{
-	ItemsSelector: grabber.Selector{
-		XPath: "//div[@class='top-main__news-item']",
-	},
-	TitleSelector: grabber.Selector{
-		XPath: "//div[@class='top-card__title']",
-		Value: grabber.Text,
-	},
-	LinkSelector: grabber.Selector{
-		XPath: "//a",
-		Value: grabber.Attribute,
-		Attr:  "href",
-	},
-	DescriptionSelector: grabber.Selector{
-		XPath: "//meta[@itemprop='articleBody']",
-		Value: grabber.Attribute,
-		Attr:  "content",
-	},
-	FollowLinkForDescription: true,
-}
-
 func main() {
-	var url string
-	//flag.StringVar(&url, "url", "https://lenta.ru", "News page URL")
-	flag.StringVar(&url, "url", "https://news.rambler.ru/", "News page URL")
-	flag.Parse()
-	if url == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
+	if err := config.SetEnvFromFile(); err != nil {
+		log.Fatal("failed to set environment variables from provided file: ", err)
 	}
-	grab := grabber.NewHtmlGrabber()
-	articles, err := grab.GrabNews(url, ramblerQuery)
+
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatal("failed to grab articles: ", err)
+		log.Fatal("failed to load configuration: ", err)
 	}
-	for _, article := range articles {
-		fmt.Println("TITLE: ", article.Title)
-		fmt.Println("LINK: ", article.Link)
-		fmt.Println("DESC: ", article.Description)
+
+	repo, err := repository.NewPostgresRepository(cfg.DbURL)
+	if err != nil {
+		log.Fatal("repository creation error: ", err)
 	}
+
+	err = repo.Migrate()
+	if err != nil {
+		log.Fatal("database migration application error: ", err)
+	}
+
+	// Init and start server
+	api := operations.NewGrabberAPI(validateSpec(restapi.SwaggerJSON, restapi.FlatSwaggerJSON))
+	server := restapi.NewServer(api)
+	defer func() {
+		if err := server.Shutdown(); err != nil {
+			log.Print("Server shutdown failed with error: ", err)
+		}
+	}()
+	handler := backend.InitAndBindToAPI(repo, grabber.NewHtmlGrabber(), api)
+	server.GracefulTimeout = time.Duration(15) * time.Second
+	server.SetHandler(handler)
+	server.Port = 8701
+
+	if err := server.Serve(); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func validateSpec(orig, flat json.RawMessage) *loads.Document {
+	swaggerSpec, err := loads.Embedded(orig, flat)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return swaggerSpec
 }

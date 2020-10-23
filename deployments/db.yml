@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  postgresdb:
+    image: postgres:9.6.10
+    command: postgres -c 'max_connections=300'
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: grabberdb
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgresdb_data:/var/lib/postgresql/data
+    networks:
+      - grabber_net
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  postgresdb_data:
+    driver: local
+
+networks:
+  grabber_net:
+    driver: overlay
+    external: true
