@@ -50,17 +50,16 @@ curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
  ```
 
 Добавить источник парсинга (Rambler):
+
 ```
-curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
---header 'Content-Type: application/json' \
---data-raw '{
+{
   "url": "https://news.rambler.ru",
   "query": {
     "itemsSelector": {
-      "xpath": "//div[@class='\''top-main__news-item'\'']"
+      "xpath": "//div[@class='top-main__news-item']"
     },
     "titleSelector": {
-      "xpath": "//div[@class='\''top-card__title'\'']",
+      "xpath": "//div[@class='top-card__title']",
       "value": "text"
     },
     "linkSelector": {
@@ -69,16 +68,15 @@ curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
       "attr": "href"
     },
     "descriptionSelector": {
-      "xpath": "//meta[@itemprop='\''articleBody'\'']",
+      "xpath": "//meta[@itemprop='articleBody']",
       "value": "attr",
       "attr": "content"
     },
     "followLinkForDescription": true
   },
   "periodSec": 60
-}'
-
- ```
+}
+```
 
 Получить список активных источников (джобов):
 ```
