@@ -88,6 +88,7 @@ func (s *service) jobWorker(period time.Duration, url string, query grabber.Quer
 			}
 		case <-doneChan:
 			log.Print("worker done")
+			ticker.Stop()
 			return
 		}
 	}
