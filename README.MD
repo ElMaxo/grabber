@@ -22,6 +22,7 @@
 **Работа с сервисом**
 
 Добавить источник парсинга (lenta.ru):
+
 ```
 curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
  --header 'Content-Type: application/json' \
@@ -50,6 +51,7 @@ curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
  ```
 
 Добавить источник парсинга (Rambler):
+
 ```
 curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
 --header 'Content-Type: application/json' \
@@ -77,6 +79,7 @@ curl --location --request POST 'http://127.0.0.1:8701/api/v1/grabber/jobs' \
   },
   "periodSec": 60
 }'
+
 ```
 
 Получить список активных источников (джобов):
